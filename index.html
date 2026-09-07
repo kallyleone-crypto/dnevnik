@@ -1,264 +1,117 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Дневник — семейный календарь</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --paper: #f6f1e8;
-      --paper-2: #efe8db;
-      --ink: #2c241b;
-      --muted: #7a7064;
-      --line: #e4d9c8;
-      --teal: #2f5d56;
-      --mark: #5b8ec9;
-      --mark-bg: #d7e5f6;
-      --katya: #e08a3c;
-      --katya-bg: #f6d4b0;
-      --anya: #4a9b8e;
-      --anya-bg: #cde8e2;
-      --gold: #c4a265;
-      --gold-bg: #ead9b0;
-      --danger: #b42318;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    body {
-      font-family: Manrope, system-ui, sans-serif;
-      color: var(--ink);
-      background: radial-gradient(1200px 600px at 20% -10%, #fff8ee 0%, transparent 50%), #d9cbb6;
-    }
-    button, input, select { font-family: inherit; }
-    button { cursor: pointer; }
-    .stage { min-height: 100%; display: grid; place-items: center; padding: 24px 16px 32px; }
-    .wrap { width: min(1120px, 100%); display: grid; grid-template-columns: 390px 1fr; gap: 28px; align-items: start; }
-    .phone {
-      width: 390px; height: 780px; background: var(--paper); border-radius: 36px;
-      box-shadow: 0 30px 70px rgba(60, 40, 20, .22), inset 0 0 0 1px rgba(255,255,255,.4);
-      overflow: hidden; display: flex; flex-direction: column; position: relative;
-    }
-    .status { padding: 12px 22px 6px; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
-    .app { flex: 1; overflow: auto; padding: 0 18px 88px; }
-    .app::-webkit-scrollbar { width: 0; }
-    .brand { display: flex; justify-content: space-between; align-items: center; padding: 4px 0 10px; }
-    .brand h1 { font-family: "Cormorant Garamond", serif; font-size: 34px; font-weight: 600; }
-    .viewer { display: flex; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
-    .chip { border: 0; background: transparent; border-radius: 999px; padding: 6px 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
-    .chip.on { color: #fff; }
-    .chip.mark.on { background: var(--mark); }
-    .chip.katya.on { background: var(--katya); }
-    .chip.anya.on { background: var(--anya); }
-    .toast { display: none; background: #fff8ee; border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
-    .toast.show { display: block; }
-    .day-card { background: #fffcf7; border: 1px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 10px; text-align: left; width: 100%; }
-    .day-card.today { box-shadow: inset 3px 0 0 var(--teal); }
-    .day-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
-    .day-head b { color: var(--ink); font-size: 14px; }
-    .pills { display: flex; flex-direction: column; gap: 6px; }
-    .pill { border: 0; border-radius: 12px; padding: 8px 10px; font-size: 13px; font-weight: 600; text-align: left; width: 100%; }
-    .pill.mark { background: var(--mark-bg); color: #2a4d73; }
-    .pill.katya { background: var(--katya-bg); color: #7a3f12; }
-    .pill.anya { background: var(--anya-bg); color: #215850; }
-    .pill.gold { background: var(--gold-bg); color: #6a4e1d; }
-    .pill.cancelled { opacity: .45; text-decoration: line-through; }
-    .tabs { position: absolute; left: 14px; right: 14px; bottom: 14px; background: #fffcf7; border: 1px solid var(--line); border-radius: 18px; display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 6px; }
-    .tab { border: 0; background: transparent; border-radius: 12px; padding: 10px 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
-    .tab.on { background: var(--paper-2); color: var(--ink); }
-    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 14px; }
-    .icon-btn { width: 36px; height: 36px; border: 1px solid var(--line); background: #fff; border-radius: 12px; font-size: 16px; }
-    .title { font-size: 18px; font-weight: 700; }
-    .members { display: flex; gap: 8px; margin-bottom: 12px; }
-    .dot { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 600; }
-    .slot { display: grid; grid-template-columns: 52px 1fr; min-height: 46px; }
-    .hour { color: var(--muted); font-size: 11px; padding-top: 2px; }
-    .lane { border-top: 1px dashed #e8ddcd; }
-    .block { position: absolute; left: 0; right: 0; border-radius: 14px; padding: 10px 12px; font-size: 13px; font-weight: 600; border: 0; text-align: left; }
-    .block small { display: block; font-weight: 500; opacity: .8; margin-top: 2px; }
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: absolute; left: 0; right: 0; }
-    .split .block { position: relative; min-height: 72px; }
-    .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid var(--line); border-radius: 999px; font-size: 11px; padding: 2px 8px; z-index: 2; }
-    .primary, .ghost, .danger { width: 100%; border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 700; margin-top: 10px; }
-    .primary { background: var(--teal); color: #fff; border: 0; }
-    .ghost { background: #fff; border: 1px solid var(--line); color: var(--ink); }
-    .danger { background: transparent; border: 0; color: var(--danger); }
-    .card { background: #fffcf7; border: 1px solid var(--line); border-radius: 18px; padding: 14px; margin-bottom: 12px; }
-    .row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; font-size: 14px; }
-    .row span { color: var(--muted); }
-    .colors { display: flex; gap: 8px; margin-top: 8px; }
-    .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; }
-    .swatch.on { border-color: var(--ink); }
-    label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
-    input, select { width: 100%; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 11px 12px; font-size: 14px; }
-    .who { display: flex; gap: 6px; }
-    .who button { flex: 1; }
-    .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
-    .aside h2 { font-family: "Cormorant Garamond", serif; font-size: 40px; font-weight: 600; line-height: 1.05; margin-bottom: 10px; }
-    .aside p { color: #5c5348; line-height: 1.55; margin-bottom: 14px; max-width: 520px; }
-    .aside ol { padding-left: 18px; color: #5c5348; line-height: 1.7; }
-    @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; justify-items: center; } .aside { max-width: 390px; } }
-  </style>
-</head>
-<body>
-  <div class="stage">
-    <div class="wrap">
-      <div class="phone">
-        <div class="status"><span>9:41</span><span>LTE</span></div>
-        <div class="app" id="app"></div>
-        <nav class="tabs">
-          <button class="tab on" data-go="week">Неделя</button>
-          <button class="tab" data-go="day">День</button>
-          <button class="tab" data-go="family">Семья</button>
-        </nav>
-      </div>
-      <aside class="aside">
-        <h2>Дневник</h2>
-        <p>Кликабельный макет семейного календаря: общий дневник, цвет у каждого, пересечения на одном времени и отмена без переписки.</p>
-        <ol>
-          <li>Откройте вторник — клетка 17:00 делится на Марка и Катю.</li>
-          <li>Нажмите «Стоматолог» → «Отменить запись».</li>
-          <li>Переключите зрителя на Катю — она уже видит свободный слот.</li>
-          <li>В «Семья» можно пригласить второй телефон.</li>
-        </ol>
-      </aside>
-    </div>
-  </div>
-  <script>
-    const MEMBERS = {
-      mark: { name: "Марк", color: "mark", letter: "М" },
-      katya: { name: "Катя", color: "katya", letter: "К" },
-      anya: { name: "Аня", color: "anya", letter: "А" }
-    };
-    const DAYS = [
-      { id: "2026-09-08", label: "Понедельник", short: "8 сентября" },
-      { id: "2026-09-09", label: "Вторник", short: "9 сентября", focus: true },
-      { id: "2026-09-10", label: "Среда", short: "10 сентября" },
-      { id: "2026-09-11", label: "Четверг", short: "11 сентября" },
-      { id: "2026-09-12", label: "Пятница", short: "12 сентября" },
-      { id: "2026-09-13", label: "Суббота", short: "13 сентября" },
-      { id: "2026-09-14", label: "Воскресенье", short: "14 сентября" }
-    ];
-    const state = {
-      screen: "week", viewer: "mark", day: "2026-09-09", eventId: "dentist", toast: "",
-      colors: { mark: "mark", katya: "katya", anya: "anya" },
-      form: { who: "mark", title: "Стоматолог", date: "2026-09-09", start: "17:00", end: "18:30", note: "другой конец города" },
-      events: [
-        { id: "school-mon", day: "2026-09-08", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
-        { id: "eng-mon", day: "2026-09-08", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
-        { id: "dentist", day: "2026-09-09", who: "mark", title: "Стоматолог", start: "17:00", end: "18:30", note: "другой конец города", cancelled: false },
-        { id: "nails", day: "2026-09-09", who: "katya", title: "Маникюр", start: "17:00", end: "18:30", note: "салон" },
-        { id: "school-tue", day: "2026-09-09", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
-        { id: "eng-tue", day: "2026-09-09", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
-        { id: "theatre", day: "2026-09-10", who: "all", title: "Театр", start: "19:00", end: "21:30" },
-        { id: "school-thu", day: "2026-09-11", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
-        { id: "eng-thu", day: "2026-09-11", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
-        { id: "school-fri", day: "2026-09-12", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
-        { id: "nails-fri", day: "2026-09-12", who: "katya", title: "Маникюр", start: "17:00", end: "18:00" },
-        { id: "eng-sat", day: "2026-09-13", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
-        { id: "theatre-sun", day: "2026-09-14", who: "all", title: "Театр", start: "19:00", end: "21:00" }
-      ]
-    };
-    const $ = (sel) => document.querySelector(sel);
-    const colorOf = (who) => who === "all" ? "gold" : (state.colors[who] || who);
-    function go(screen, extra = {}) { Object.assign(state, extra, { screen }); render(); }
-    function eventsOn(day) { return state.events.filter(e => e.day === day); }
-    function pill(ev) {
-      const who = ev.who === "all" ? "" : MEMBERS[ev.who].name + " · ";
-      return `<button class="pill ${colorOf(ev.who)}${ev.cancelled ? " cancelled" : ""}" data-open="${ev.id}">${who}${ev.title} ${ev.start}${ev.cancelled ? " · отменено" : ""}</button>`;
-    }
-    function viewerSwitch() {
-      return `<div class="viewer">${Object.entries(MEMBERS).map(([id,m]) => `<button class="chip ${m.color} ${state.viewer===id?"on":""}" data-viewer="${id}">${m.name}</button>`).join("")}</div>`;
-    }
-    function weekView() {
-      return `<div class="brand"><h1>Дневник</h1>${viewerSwitch()}</div>
-        <div class="toast ${state.toast?"show":""}">${state.toast}</div>
-        ${DAYS.map(d => `<button class="day-card ${d.focus?"today":""}" data-day="${d.id}"><div class="day-head"><b>${d.label}</b><span>${d.short}</span></div><div class="pills">${eventsOn(d.id).map(pill).join("")}</div></button>`).join("")}`;
-    }
-    function toMin(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
-    function topPx(t){return ((toMin(t)-480)/60)*46;}
-    function hPx(a,b){return Math.max(46,((toMin(b)-toMin(a))/60)*46);}
-    function dayView() {
-      const day = DAYS.find(d => d.id === state.day) || DAYS[1];
-      const evs = eventsOn(state.day);
-      const hours = Array.from({length:13},(_,i)=>8+i);
-      const dentist = evs.find(e => e.id === "dentist");
-      const nails = evs.find(e => e.id === "nails");
-      const split = state.day === "2026-09-09" && dentist && nails;
-      return `<div class="topbar"><button class="icon-btn" data-go="week">←</button><div class="title">${day.label}, ${day.short}</div><button class="icon-btn" data-go="add">+</button></div>
-        <div class="toast ${state.toast?"show":""}">${state.toast}</div>
-        <div class="timeline" style="position:relative;height:${13*46}px">
-          ${hours.map(h=>`<div class="slot"><div class="hour">${String(h).padStart(2,"0")}:00</div><div class="lane"></div></div>`).join("")}
-          ${evs.filter(e => !(split && (e.id==="dentist"||e.id==="nails"))).map(e => `<button class="block" style="top:${topPx(e.start)}px;height:${hPx(e.start,e.end)}px;background:var(--${colorOf(e.who)}-bg)" data-open="${e.id}">${e.who==="all"?e.title:MEMBERS[e.who].name+" · "+e.title}${e.note?`<small>${e.note}</small>`:""}</button>`).join("")}
-          ${split?`<div class="split" style="top:${topPx("17:00")}px;height:${hPx("17:00","18:30")}px">
-            ${!dentist.cancelled?`<div class="badge">пересечение</div>`:""}
-            <button class="block ${dentist.cancelled?"pill cancelled":""}" style="background:var(--mark-bg)" data-open="dentist">Марк · Стоматолог<small>${dentist.cancelled?"отменено · 3 часа назад":"другой конец города"}</small></button>
-            <button class="block" style="background:var(--katya-bg)" data-open="nails">Катя · Маникюр<small>салон</small></button>
-          </div>`:""}
-        </div>
-        <button class="primary" data-go="add">+ Добавить запись</button>`;
-    }
-    function familyView() {
-      return `<div class="topbar"><div class="title" style="font-family:'Cormorant Garamond',serif;font-size:32px">Семья</div></div>
-        ${Object.entries(MEMBERS).map(([id,m]) => `<div class="card"><div class="row"><b>${m.name}</b><span>свой цвет</span></div>
-          <div class="colors"><span class="swatch on" style="background:var(--${m.color})"></span><span class="swatch" style="background:#d7c7b5"></span><span class="swatch" style="background:#fff"></span></div></div>`).join("")}
-        <button class="ghost" id="invite">Пригласить в календарь</button>
-        <div class="hint" style="text-align:center">один календарь на несколько телефонов</div>`;
-    }
-    function addView() {
-      const f = state.form;
-      return `<div class="topbar"><button class="icon-btn" data-go="day">←</button><div class="title">Новая запись</div><span></span></div>
-        <label>Кто</label><div class="who">${Object.entries(MEMBERS).map(([id,m])=>`<button class="chip ${m.color} ${f.who===id?"on":""}" data-who="${id}">${m.name}</button>`).join("")}</div>
-        <label>Что</label><input id="title" value="${f.title}" />
-        <label>Дата</label><select id="date">${DAYS.map(d=>`<option value="${d.id}" ${d.id===f.date?"selected":""}>${d.label}, ${d.short}</option>`).join("")}</select>
-        <label>Время</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="start" value="${f.start}" /><input id="end" value="${f.end}" /></div>
-        <label>Где / заметка</label><input id="note" value="${f.note}" />
-        <button class="primary" id="save">Сохранить</button>`;
-    }
-    function eventView() {
-      const ev = state.events.find(e => e.id === state.eventId);
-      if (!ev) return weekView();
-      const who = ev.who === "all" ? "вся семья" : MEMBERS[ev.who].name;
-      const day = DAYS.find(d => d.id === ev.day);
-      return `<div class="topbar"><button class="icon-btn" data-go="day">←</button><div class="title">${ev.title}</div><span></span></div>
-        <div class="card">
-          <div class="row"><span>Кто</span><b>${who}</b></div>
-          <div class="row"><span>Когда</span><b>${day.label} ${ev.start}–${ev.end}</b></div>
-          <div class="row"><span>Где</span><b>${ev.note || "—"}</b></div>
-          <div class="row"><span>Видят</span><b>вся семья</b></div>
-        </div>
-        <button class="ghost" data-go="add">Перенести</button>
-        ${ev.cancelled ? `<div class="hint">Уже отменено</div>` : `<button class="danger" id="cancel">Отменить запись</button><div class="hint">Катя и Аня увидят изменение сразу</div>`}`;
-    }
-    function render() {
-      const map = { week: weekView, day: dayView, family: familyView, add: addView, event: eventView };
-      $("#app").innerHTML = (map[state.screen] || weekView)();
-      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.go === (["add","event"].includes(state.screen) ? "day" : state.screen)));
-    }
-    document.body.addEventListener("click", (e) => {
-      const t = e.target.closest("[data-go],[data-day],[data-open],[data-viewer],[data-who],#cancel,#save,#invite");
-      if (!t) return;
-      if (t.dataset.viewer) { state.viewer = t.dataset.viewer; render(); return; }
-      if (t.dataset.who) { state.form.who = t.dataset.who; render(); return; }
-      if (t.dataset.day) { go("day", { day: t.dataset.day }); return; }
-      if (t.dataset.open) { const ev = state.events.find(x => x.id === t.dataset.open); go("event", { eventId: t.dataset.open, day: ev ? ev.day : state.day }); return; }
-      if (t.dataset.go) { go(t.dataset.go); return; }
-      if (t.id === "invite") { state.toast = "Ссылка скопирована — откройте на втором телефоне"; go("family"); return; }
-      if (t.id === "cancel") {
-        const ev = state.events.find(x => x.id === state.eventId);
-        if (ev) ev.cancelled = true;
-        state.toast = (MEMBERS[ev.who] ? MEMBERS[ev.who].name : "") + " отменил(а) «" + ev.title + "» — слот " + ev.start + " свободен";
-        go("day", { day: ev.day }); return;
-      }
-      if (t.id === "save") {
-        state.events.push({ id: "e" + Date.now(), day: $("#date").value, who: state.form.who, title: $("#title").value.trim() || "Запись", start: $("#start").value, end: $("#end").value, note: $("#note").value });
-        state.toast = "Запись появилась у всей семьи";
-        go("week");
-      }
-    });
-    render();
-  </script>
-</body>
-</html>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Дневник — макет для заказчика</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{--paper:#f4efe6;--sheet:#fffaf2;--ink:#2b241c;--muted:#7a7166;--line:#e6dccb;--teal:#2f5d56;--danger:#b42318;--c-blue:#5b8ec9;--c-blue-bg:#d5e4f5;--c-blue-ink:#2a4d73;--c-orange:#e08a3c;--c-orange-bg:#f6d4b0;--c-orange-ink:#7a3f12;--c-teal:#4a9b8e;--c-teal-bg:#cde8e2;--c-teal-ink:#215850;--c-gold:#c4a265;--c-gold-bg:#ead9b0;--c-gold-ink:#6a4e1d;--c-rose:#c56b7a;--c-rose-bg:#f3d0d6;--c-rose-ink:#6e2e3a;--c-violet:#7b6ea8;--c-violet-bg:#ddd6ef;--c-violet-ink:#3f355f}
+*{box-sizing:border-box;margin:0;padding:0}html,body{min-height:100%}
+body{font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:radial-gradient(900px 420px at 10% 0%,#fff6ea,transparent 55%),#d7c7ae}
+button,input,select{font:inherit}button{cursor:pointer}
+.page{max-width:1180px;margin:0 auto;padding:28px 20px 48px;display:grid;grid-template-columns:420px minmax(280px,1fr);gap:36px;align-items:start}
+.device{width:390px;height:812px;margin:0 auto;background:#1c1814;border-radius:42px;padding:10px;box-shadow:0 28px 70px rgba(50,30,10,.28)}
+.phone{height:100%;background:var(--paper);border-radius:32px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:118px;height:22px;background:#1c1814;border-radius:16px;z-index:5}
+.status{padding:14px 22px 4px;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:600}
+.app{flex:1;overflow:auto;padding:4px 16px 96px}.app::-webkit-scrollbar{width:0}
+.tabs{position:absolute;left:12px;right:12px;bottom:12px;background:var(--sheet);border:1px solid var(--line);border-radius:20px;display:grid;grid-template-columns:1fr 1fr 1fr;padding:5px}
+.tab{border:0;background:transparent;border-radius:15px;padding:11px 6px;font-size:13px;font-weight:700;color:var(--muted)}
+.tab.on{background:#efe6d6;color:var(--ink)}
+.brand{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;padding:6px 0 12px}
+.brand h1{font-family:"Cormorant Garamond",serif;font-size:34px;line-height:1}
+.whoami{font-size:11px;color:var(--muted);font-weight:600}
+.toast{display:none;background:#fff6e6;border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:12px}.toast.show{display:block}
+.day-card{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:10px;width:100%;text-align:left}
+.day-card.focus{outline:2px solid #2f5d56}
+.day-head{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:8px}.day-head b{color:var(--ink);font-size:14px}
+.pills{display:flex;flex-direction:column;gap:6px}
+.pill,.block{border:0;border-radius:12px;padding:8px 10px;font-size:13px;font-weight:700;text-align:left}.pill{width:100%}
+.cancelled{opacity:.48;text-decoration:line-through}
+.c-blue{background:var(--c-blue-bg);color:var(--c-blue-ink)}.c-orange{background:var(--c-orange-bg);color:var(--c-orange-ink)}.c-teal{background:var(--c-teal-bg);color:var(--c-teal-ink)}.c-gold{background:var(--c-gold-bg);color:var(--c-gold-ink)}.c-rose{background:var(--c-rose-bg);color:var(--c-rose-ink)}.c-violet{background:var(--c-violet-bg);color:var(--c-violet-ink)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:4px 0 12px;gap:8px}
+.icon-btn{width:36px;height:36px;border:1px solid var(--line);background:var(--sheet);border-radius:12px}
+.title{font-size:16px;font-weight:800;text-align:center;flex:1}
+.timeline{position:relative}.slot{display:grid;grid-template-columns:46px 1fr;min-height:44px}.hour{color:var(--muted);font-size:11px;padding-top:2px}.lane{border-top:1px dashed #e4d8c4}
+.block{position:absolute;left:46px;right:0}.block small{display:block;font-weight:500;opacity:.8;margin-top:2px}
+.split{display:grid;gap:6px;position:absolute;left:46px;right:0}.split .block{position:relative;left:0;min-height:70px}
+.badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--line);border-radius:999px;font-size:11px;padding:2px 8px;z-index:2;white-space:nowrap}
+.primary,.ghost,.danger{width:100%;border-radius:14px;padding:13px;font-size:15px;font-weight:800;margin-top:10px}
+.primary{background:var(--teal);color:#fff;border:0}.ghost{background:var(--sheet);border:1px solid var(--line)}.danger{background:transparent;border:0;color:var(--danger)}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:14px}.row span{color:var(--muted)}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800}
+.colors{display:flex;gap:8px;margin-top:10px}.swatch{width:24px;height:24px;border-radius:50%;border:2px solid transparent}.swatch.on{border-color:var(--ink)}
+label{display:block;font-size:12px;color:var(--muted);margin:12px 0 6px;font-weight:700}
+input,select{width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px}
+.who{display:flex;gap:6px}.who button{flex:1;border:0;border-radius:999px;padding:8px 6px;font-size:12px;font-weight:700;background:#eee7da;color:var(--muted)}.who button.on{color:#fff}
+.who button[data-who=mark].on{background:var(--c-blue)}.who button[data-who=katya].on{background:var(--c-orange)}.who button[data-who=anya].on{background:var(--c-teal)}
+.hint{color:var(--muted);font-size:12px;margin-top:8px;line-height:1.4}
+.sheet{position:absolute;inset:auto 12px 78px 12px;background:var(--sheet);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 16px 40px rgba(40,20,0,.18);z-index:6}
+.aside h2{font-family:"Cormorant Garamond",serif;font-size:42px;line-height:.95;margin:8px 0 10px}
+.aside .badge-soft{display:inline-block;background:#efe6d6;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.aside p{color:#5b5348;line-height:1.55;margin:10px 0 16px;max-width:540px}
+.steps{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.step{text-align:left;background:#fffaf2;border:1px solid var(--line);border-radius:14px;padding:11px 12px;font-size:14px}.step b{display:block;margin-bottom:2px}.step.on{border-color:var(--teal);box-shadow:inset 3px 0 0 var(--teal)}
+.phones{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.phones button{border:1px solid var(--line);background:#fffaf2;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700}.phones button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.fine{font-size:12px;color:#6f675c;margin-top:16px}
+@media(max-width:860px){.page{grid-template-columns:1fr;justify-items:center}.aside{max-width:390px}}
+</style></head><body>
+<div class="page"><div><div class="device"><div class="phone">
+<div class="notch"></div>
+<div class="status"><span>9:41</span><span>LTE</span></div>
+<div class="app" id="app"></div>
+<nav class="tabs">
+<button class="tab" data-go="week">Неделя</button>
+<button class="tab" data-go="day">День</button>
+<button class="tab" data-go="family">Семья</button>
+</nav>
+<div id="modal"></div>
+</div></div></div>
+<aside class="aside">
+<div class="badge-soft">Макет для согласования · не продукт</div>
+<h2>Дневник</h2>
+<p>Общий семейный календарь: у каждого свой цвет, пересечения видны сразу, отмена доходит до всех телефонов без переписки.</p>
+<div class="phones" id="phones"></div>
+<div class="steps">
+<button class="step" data-demo="1"><b>1. Неделя как дневник</b>Все планы семьи на одном экране</button>
+<button class="step" data-demo="2"><b>2. Вторник, 17:00</b>Клетка делится: стоматолог и маникюр</button>
+<button class="step" data-demo="3"><b>3. Отмена без чата</b>Марк снимает запись — Катя видит слот</button>
+<button class="step" data-demo="4"><b>4. Семья и цвета</b>Пригласить второй телефон</button>
+</div>
+<button class="ghost" id="reset" style="width:auto;padding:10px 14px">Сбросить демо</button>
+<p class="fine">Это кликабельный прототип. Синхронизация, аккаунты и App Store — следующий этап после одобрения.</p>
+</aside></div>
+<script>
+const MEMBERS={mark:{name:"Марк",letter:"М"},katya:{name:"Катя",letter:"К"},anya:{name:"Аня",letter:"А"}};
+const COLORS=["blue","orange","teal","rose","violet","gold"];
+const DAYS=[{id:"2026-09-08",label:"Понедельник",short:"8 сентября"},{id:"2026-09-09",label:"Вторник",short:"9 сентября",focus:true},{id:"2026-09-10",label:"Среда",short:"10 сентября"},{id:"2026-09-11",label:"Четверг",short:"11 сентября"},{id:"2026-09-12",label:"Пятница",short:"12 сентября"},{id:"2026-09-13",label:"Суббота",short:"13 сентября"},{id:"2026-09-14",label:"Воскресенье",short:"14 сентября"}];
+const SEED=()=>[{id:"school-mon",day:"2026-09-08",who:"anya",title:"Школа",start:"08:30",end:"15:00"},{id:"eng-mon",day:"2026-09-08",who:"anya",title:"Английский",start:"16:00",end:"17:00"},{id:"school-tue",day:"2026-09-09",who:"anya",title:"Школа",start:"08:30",end:"15:00"},{id:"eng-tue",day:"2026-09-09",who:"anya",title:"Английский",start:"16:00",end:"17:00"},{id:"dentist",day:"2026-09-09",who:"mark",title:"Стоматолог",start:"17:00",end:"18:30",note:"другой конец города"},{id:"nails",day:"2026-09-09",who:"katya",title:"Маникюр",start:"17:00",end:"18:30",note:"салон"},{id:"theatre",day:"2026-09-10",who:"all",title:"Театр",start:"19:00",end:"21:30"},{id:"school-thu",day:"2026-09-11",who:"anya",title:"Школа",start:"08:30",end:"15:00"},{id:"eng-thu",day:"2026-09-11",who:"anya",title:"Английский",start:"16:00",end:"17:00"},{id:"school-fri",day:"2026-09-12",who:"anya",title:"Школа",start:"08:30",end:"15:00"},{id:"train",day:"2026-09-12",who:"mark",title:"Созвон",start:"11:00",end:"12:00",note:"удалёнка"},{id:"nails-fri",day:"2026-09-12",who:"katya",title:"Маникюр",start:"17:00",end:"18:00"},{id:"party",day:"2026-09-13",who:"anya",title:"День рождения",start:"15:00",end:"18:00",note:"подруга"},{id:"weekend",day:"2026-09-13",who:"mark",title:"Забрать детей?",start:"15:00",end:"18:00",note:"спорный слот"}];
+const state={screen:"week",viewer:"mark",day:"2026-09-09",eventId:null,toast:"",modal:"",demo:"1",colors:{mark:"blue",katya:"orange",anya:"teal"},form:{who:"mark",title:"",date:"2026-09-09",start:"17:00",end:"18:00",note:""},events:SEED()};
+const $=s=>document.querySelector(s);
+const colorOf=who=>who==="all"?"gold":(state.colors[who]||"blue");
+const cls=(who,extra="")=>`c-${colorOf(who)} ${extra}`.trim();
+const dayMeta=id=>DAYS.find(d=>d.id===id)||DAYS[1];
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m};
+const topPx=t=>((toMin(t)-480)/60)*44;
+const hPx=(a,b)=>Math.max(44,((toMin(b)-toMin(a))/60)*44);
+function go(screen,extra={}){Object.assign(state,extra,{screen,modal:extra.modal||""});render();}
+function eventsOn(day){return state.events.filter(e=>e.day===day);}
+function overlaps(a,b){return toMin(a.start)<toMin(b.end)&&toMin(b.start)<toMin(a.end);}
+function groups(day){const evs=eventsOn(day).slice().sort((a,b)=>toMin(a.start)-toMin(b.start));const used=new Set();const out=[];evs.forEach((e,i)=>{if(used.has(e.id))return;const pack=[e];used.add(e.id);evs.slice(i+1).forEach(o=>{if(!used.has(o.id)&&pack.some(p=>overlaps(p,o))){pack.push(o);used.add(o.id);}});out.push(pack);});return out;}
+function pill(ev){const who=ev.who==="all"?"":MEMBERS[ev.who].name+" · ";return `<button class="pill ${cls(ev.who,ev.cancelled?"cancelled":"")}" data-open="${ev.id}">${who}${ev.title} ${ev.start}${ev.cancelled?" · отменено":""}</button>`;}
+function weekView(){return `<div class="brand"><div><div class="whoami">телефон ${MEMBERS[state.viewer].name}</div><h1>Дневник</h1></div></div><div class="toast ${state.toast?"show":""}">${state.toast}</div>${DAYS.map(d=>`<button class="day-card ${d.id===state.day&&state.demo==="2"?"focus":""}" data-day="${d.id}"><div class="day-head"><b>${d.label}</b><span>${d.short}</span></div><div class="pills">${eventsOn(d.id).map(pill).join("")}</div></button>`).join("")}`;}
+function dayView(){const day=dayMeta(state.day);const hours=Array.from({length:13},(_,i)=>8+i);const packs=groups(state.day);return `<div class="topbar"><button class="icon-btn" data-go="week">←</button><div class="title">${day.label}, ${day.short}</div><button class="icon-btn" data-go="add">+</button></div><div class="toast ${state.toast?"show":""}">${state.toast}</div><div class="timeline" style="height:${13*44}px">${hours.map(h=>`<div class="slot"><div class="hour">${String(h).padStart(2,"0")}:00</div><div class="lane"></div></div>`).join("")}${packs.map(pack=>{const start=pack.reduce((m,e)=>toMin(e.start)<toMin(m)?e.start:m,pack[0].start);const end=pack.reduce((m,e)=>toMin(e.end)>toMin(m)?e.end:m,pack[0].end);if(pack.length===1){const e=pack[0];return `<button class="block ${cls(e.who,e.cancelled?"cancelled":"")}" style="top:${topPx(e.start)}px;height:${hPx(e.start,e.end)}px" data-open="${e.id}">${e.who==="all"?e.title:MEMBERS[e.who].name+" · "+e.title}<small>${e.cancelled?"отменено":(e.note||e.start+"–"+e.end)}</small></button>`;}const live=pack.filter(e=>!e.cancelled);const badge=live.length>1?`<div class="badge">пересечение</div>`:"";return `<div class="split" style="top:${topPx(start)}px;height:${hPx(start,end)}px;grid-template-columns:repeat(${pack.length},1fr)">${badge}${pack.map(e=>`<button class="block ${cls(e.who,e.cancelled?"cancelled":"")}" data-open="${e.id}">${e.who==="all"?e.title:MEMBERS[e.who].name+" · "+e.title}<small>${e.cancelled?"отменено · слот свободен":(e.note||"")}</small></button>`).join("")}</div>`;}).join("")}</div><button class="primary" data-go="add">+ Добавить запись</button>`;}
+function familyView(){return `<div class="topbar"><div class="title" style="font-family:'Cormorant Garamond',serif;font-size:30px">Семья</div></div>${Object.entries(MEMBERS).map(([id,m])=>`<div class="card"><div class="row" style="align-items:center"><div style="display:flex;gap:12px;align-items:center"><div class="avatar c-${state.colors[id]}">${m.letter}</div><div><b>${m.name}</b><div class="hint">свой цвет</div></div></div></div><div class="colors">${COLORS.map(c=>`<button class="swatch ${state.colors[id]===c?"on":""} c-${c}" data-setcolor="${id}:${c}"></button>`).join("")}</div></div>`).join("")}<button class="ghost" id="invite">Пригласить в календарь</button><div class="hint" style="text-align:center">один календарь на несколько телефонов</div>`;}
+function addView(){const f=state.form;return `<div class="topbar"><button class="icon-btn" data-go="day">←</button><div class="title">Новая запись</div><span style="width:36px"></span></div><label>Кто</label><div class="who">${Object.entries(MEMBERS).map(([id,m])=>`<button data-who="${id}" class="${f.who===id?"on":""}">${m.name}</button>`).join("")}</div><label>Что</label><input id="title" value="${f.title}" placeholder="Стоматолог, кружок, театр" /><label>Дата</label><select id="date">${DAYS.map(d=>`<option value="${d.id}" ${d.id===f.date?"selected":""}>${d.label}, ${d.short}</option>`).join("")}</select><label>Время</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="start" value="${f.start}"/><input id="end" value="${f.end}"/></div><label>Где / заметка</label><input id="note" value="${f.note}" placeholder="можно коротко" /><button class="primary" id="save">Сохранить</button><div class="hint">Запись сразу появится у всей семьи.</div>`;}
+function eventView(){const ev=state.events.find(e=>e.id===state.eventId);if(!ev)return weekView();const day=dayMeta(ev.day);const who=ev.who==="all"?"вся семья":MEMBERS[ev.who].name;return `<div class="topbar"><button class="icon-btn" data-go="day">←</button><div class="title">${ev.title}</div><span style="width:36px"></span></div><div class="card"><div class="row"><span>Кто</span><b>${who}</b></div><div class="row"><span>Когда</span><b>${day.label} ${ev.start}–${ev.end}</b></div><div class="row"><span>Где</span><b>${ev.note||"—"}</b></div><div class="row"><span>Видят</span><b>вся семья</b></div></div><button class="ghost" id="move">Перенести</button>${ev.cancelled?`<div class="hint">Уже отменено — слот свободен на всех телефонах</div>`:`<button class="danger" id="cancel">Отменить запись</button><div class="hint">Не нужно писать в чат. Катя и Аня увидят изменение сразу.</div>`}`;}
+function renderPhones(){$("#phones").innerHTML=Object.entries(MEMBERS).map(([id,m])=>`<button class="${state.viewer===id?"on":""}" data-viewer="${id}">Телефон ${m.name}</button>`).join("");}
+function render(){const map={week:weekView,day:dayView,family:familyView,add:addView,event:eventView};$("#app").innerHTML=(map[state.screen]||weekView)();document.querySelectorAll(".tab").forEach(t=>{const key=["add","event"].includes(state.screen)?"day":state.screen;t.classList.toggle("on",t.dataset.go===key);});document.querySelectorAll(".step").forEach(s=>s.classList.toggle("on",s.dataset.demo===state.demo));renderPhones();const modal=$("#modal");if(state.modal==="invite"){modal.innerHTML=`<div class="sheet"><b>Приглашение в семью</b><div class="hint">Ссылка скопирована. Второй телефон открывает тот же дневник.</div><div class="card" style="margin-top:10px">dnevnik.app/join/semya-104</div><button class="primary" id="close-modal">Понятно</button></div>`;}else modal.innerHTML="";}
+function runDemo(n){state.demo=n;state.modal="";if(n==="1"){state.events=SEED();state.toast="";state.viewer="mark";go("week",{day:"2026-09-09"});}if(n==="2"){state.events=SEED();state.toast="";state.viewer="mark";go("day",{day:"2026-09-09"});}if(n==="3"){state.events=SEED();state.events.find(e=>e.id==="dentist").cancelled=true;state.toast="Марк отменил стоматолога — слот 17:00 свободен";state.viewer="katya";go("day",{day:"2026-09-09"});}if(n==="4"){state.toast="";go("family");}}
+document.body.addEventListener("click",e=>{const t=e.target.closest("[data-go],[data-day],[data-open],[data-viewer],[data-who],[data-setcolor],[data-demo],#cancel,#save,#invite,#reset,#close-modal,#move");if(!t)return;if(t.dataset.demo){runDemo(t.dataset.demo);return;}if(t.id==="reset"){runDemo("1");return;}if(t.dataset.viewer){state.viewer=t.dataset.viewer;render();return;}if(t.dataset.who){state.form.who=t.dataset.who;render();return;}if(t.dataset.setcolor){const[id,c]=t.dataset.setcolor.split(":");state.colors[id]=c;render();return;}if(t.dataset.day){state.demo="2";go("day",{day:t.dataset.day,toast:""});return;}if(t.dataset.open){const ev=state.events.find(x=>x.id===t.dataset.open);go("event",{eventId:t.dataset.open,day:ev?ev.day:state.day,toast:""});return;}if(t.dataset.go){go(t.dataset.go,{toast:""});return;}if(t.id==="invite"){state.modal="invite";render();return;}if(t.id==="close-modal"){state.modal="";render();return;}if(t.id==="move"){const ev=state.events.find(x=>x.id===state.eventId);if(!ev||ev.who==="all"){go("add");return;}state.form={who:ev.who,title:ev.title,date:ev.day,start:ev.start,end:ev.end,note:ev.note||""};state.events=state.events.filter(x=>x.id!==ev.id);go("add");return;}if(t.id==="cancel"){const ev=state.events.find(x=>x.id===state.eventId);if(ev)ev.cancelled=true;state.demo="3";state.toast=`${MEMBERS[ev.who]?MEMBERS[ev.who].name:""} отменил(а) «${ev.title}» — слот ${ev.start} свободен`;go("day",{day:ev.day});return;}if(t.id==="save"){const title=($("#title").value||"").trim()||"Запись";state.events.push({id:"e"+Date.now(),day:$("#date").value,who:state.form.who,title,start:$("#start").value||"17:00",end:$("#end").value||"18:00",note:$("#note").value});state.form.title="";state.form.note="";state.toast="Запись появилась у всей семьи";go("week",{day:$("#date").value});}});
+render();
+</script></body></html>
