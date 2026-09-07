@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Дневник — семейный календарь</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f6f1e8;
+      --paper-2: #efe8db;
+      --ink: #2c241b;
+      --muted: #7a7064;
+      --line: #e4d9c8;
+      --teal: #2f5d56;
+      --mark: #5b8ec9;
+      --mark-bg: #d7e5f6;
+      --katya: #e08a3c;
+      --katya-bg: #f6d4b0;
+      --anya: #4a9b8e;
+      --anya-bg: #cde8e2;
+      --gold: #c4a265;
+      --gold-bg: #ead9b0;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: Manrope, system-ui, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 600px at 20% -10%, #fff8ee 0%, transparent 50%), #d9cbb6;
+    }
+    button, input, select { font-family: inherit; }
+    button { cursor: pointer; }
+    .stage { min-height: 100%; display: grid; place-items: center; padding: 24px 16px 32px; }
+    .wrap { width: min(1120px, 100%); display: grid; grid-template-columns: 390px 1fr; gap: 28px; align-items: start; }
+    .phone {
+      width: 390px; height: 780px; background: var(--paper); border-radius: 36px;
+      box-shadow: 0 30px 70px rgba(60, 40, 20, .22), inset 0 0 0 1px rgba(255,255,255,.4);
+      overflow: hidden; display: flex; flex-direction: column; position: relative;
+    }
+    .status { padding: 12px 22px 6px; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+    .app { flex: 1; overflow: auto; padding: 0 18px 88px; }
+    .app::-webkit-scrollbar { width: 0; }
+    .brand { display: flex; justify-content: space-between; align-items: center; padding: 4px 0 10px; }
+    .brand h1 { font-family: "Cormorant Garamond", serif; font-size: 34px; font-weight: 600; }
+    .viewer { display: flex; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+    .chip { border: 0; background: transparent; border-radius: 999px; padding: 6px 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
+    .chip.on { color: #fff; }
+    .chip.mark.on { background: var(--mark); }
+    .chip.katya.on { background: var(--katya); }
+    .chip.anya.on { background: var(--anya); }
+    .toast { display: none; background: #fff8ee; border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+    .toast.show { display: block; }
+    .day-card { background: #fffcf7; border: 1px solid var(--line); border-radius: 16px; padding: 12px; margin-bottom: 10px; text-align: left; width: 100%; }
+    .day-card.today { box-shadow: inset 3px 0 0 var(--teal); }
+    .day-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .day-head b { color: var(--ink); font-size: 14px; }
+    .pills { display: flex; flex-direction: column; gap: 6px; }
+    .pill { border: 0; border-radius: 12px; padding: 8px 10px; font-size: 13px; font-weight: 600; text-align: left; width: 100%; }
+    .pill.mark { background: var(--mark-bg); color: #2a4d73; }
+    .pill.katya { background: var(--katya-bg); color: #7a3f12; }
+    .pill.anya { background: var(--anya-bg); color: #215850; }
+    .pill.gold { background: var(--gold-bg); color: #6a4e1d; }
+    .pill.cancelled { opacity: .45; text-decoration: line-through; }
+    .tabs { position: absolute; left: 14px; right: 14px; bottom: 14px; background: #fffcf7; border: 1px solid var(--line); border-radius: 18px; display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 6px; }
+    .tab { border: 0; background: transparent; border-radius: 12px; padding: 10px 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .tab.on { background: var(--paper-2); color: var(--ink); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 14px; }
+    .icon-btn { width: 36px; height: 36px; border: 1px solid var(--line); background: #fff; border-radius: 12px; font-size: 16px; }
+    .title { font-size: 18px; font-weight: 700; }
+    .members { display: flex; gap: 8px; margin-bottom: 12px; }
+    .dot { background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 600; }
+    .slot { display: grid; grid-template-columns: 52px 1fr; min-height: 46px; }
+    .hour { color: var(--muted); font-size: 11px; padding-top: 2px; }
+    .lane { border-top: 1px dashed #e8ddcd; }
+    .block { position: absolute; left: 0; right: 0; border-radius: 14px; padding: 10px 12px; font-size: 13px; font-weight: 600; border: 0; text-align: left; }
+    .block small { display: block; font-weight: 500; opacity: .8; margin-top: 2px; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; position: absolute; left: 0; right: 0; }
+    .split .block { position: relative; min-height: 72px; }
+    .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid var(--line); border-radius: 999px; font-size: 11px; padding: 2px 8px; z-index: 2; }
+    .primary, .ghost, .danger { width: 100%; border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 700; margin-top: 10px; }
+    .primary { background: var(--teal); color: #fff; border: 0; }
+    .ghost { background: #fff; border: 1px solid var(--line); color: var(--ink); }
+    .danger { background: transparent; border: 0; color: var(--danger); }
+    .card { background: #fffcf7; border: 1px solid var(--line); border-radius: 18px; padding: 14px; margin-bottom: 12px; }
+    .row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; font-size: 14px; }
+    .row span { color: var(--muted); }
+    .colors { display: flex; gap: 8px; margin-top: 8px; }
+    .swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; }
+    .swatch.on { border-color: var(--ink); }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+    input, select { width: 100%; border: 1px solid var(--line); background: #fff; border-radius: 12px; padding: 11px 12px; font-size: 14px; }
+    .who { display: flex; gap: 6px; }
+    .who button { flex: 1; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .aside h2 { font-family: "Cormorant Garamond", serif; font-size: 40px; font-weight: 600; line-height: 1.05; margin-bottom: 10px; }
+    .aside p { color: #5c5348; line-height: 1.55; margin-bottom: 14px; max-width: 520px; }
+    .aside ol { padding-left: 18px; color: #5c5348; line-height: 1.7; }
+    @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; justify-items: center; } .aside { max-width: 390px; } }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="wrap">
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>LTE</span></div>
+        <div class="app" id="app"></div>
+        <nav class="tabs">
+          <button class="tab on" data-go="week">Неделя</button>
+          <button class="tab" data-go="day">День</button>
+          <button class="tab" data-go="family">Семья</button>
+        </nav>
+      </div>
+      <aside class="aside">
+        <h2>Дневник</h2>
+        <p>Кликабельный макет семейного календаря: общий дневник, цвет у каждого, пересечения на одном времени и отмена без переписки.</p>
+        <ol>
+          <li>Откройте вторник — клетка 17:00 делится на Марка и Катю.</li>
+          <li>Нажмите «Стоматолог» → «Отменить запись».</li>
+          <li>Переключите зрителя на Катю — она уже видит свободный слот.</li>
+          <li>В «Семья» можно пригласить второй телефон.</li>
+        </ol>
+      </aside>
+    </div>
+  </div>
+  <script>
+    const MEMBERS = {
+      mark: { name: "Марк", color: "mark", letter: "М" },
+      katya: { name: "Катя", color: "katya", letter: "К" },
+      anya: { name: "Аня", color: "anya", letter: "А" }
+    };
+    const DAYS = [
+      { id: "2026-09-08", label: "Понедельник", short: "8 сентября" },
+      { id: "2026-09-09", label: "Вторник", short: "9 сентября", focus: true },
+      { id: "2026-09-10", label: "Среда", short: "10 сентября" },
+      { id: "2026-09-11", label: "Четверг", short: "11 сентября" },
+      { id: "2026-09-12", label: "Пятница", short: "12 сентября" },
+      { id: "2026-09-13", label: "Суббота", short: "13 сентября" },
+      { id: "2026-09-14", label: "Воскресенье", short: "14 сентября" }
+    ];
+    const state = {
+      screen: "week", viewer: "mark", day: "2026-09-09", eventId: "dentist", toast: "",
+      colors: { mark: "mark", katya: "katya", anya: "anya" },
+      form: { who: "mark", title: "Стоматолог", date: "2026-09-09", start: "17:00", end: "18:30", note: "другой конец города" },
+      events: [
+        { id: "school-mon", day: "2026-09-08", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
+        { id: "eng-mon", day: "2026-09-08", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
+        { id: "dentist", day: "2026-09-09", who: "mark", title: "Стоматолог", start: "17:00", end: "18:30", note: "другой конец города", cancelled: false },
+        { id: "nails", day: "2026-09-09", who: "katya", title: "Маникюр", start: "17:00", end: "18:30", note: "салон" },
+        { id: "school-tue", day: "2026-09-09", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
+        { id: "eng-tue", day: "2026-09-09", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
+        { id: "theatre", day: "2026-09-10", who: "all", title: "Театр", start: "19:00", end: "21:30" },
+        { id: "school-thu", day: "2026-09-11", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
+        { id: "eng-thu", day: "2026-09-11", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
+        { id: "school-fri", day: "2026-09-12", who: "anya", title: "Школа", start: "08:30", end: "15:00" },
+        { id: "nails-fri", day: "2026-09-12", who: "katya", title: "Маникюр", start: "17:00", end: "18:00" },
+        { id: "eng-sat", day: "2026-09-13", who: "anya", title: "Английский", start: "16:00", end: "17:00" },
+        { id: "theatre-sun", day: "2026-09-14", who: "all", title: "Театр", start: "19:00", end: "21:00" }
+      ]
+    };
+    const $ = (sel) => document.querySelector(sel);
+    const colorOf = (who) => who === "all" ? "gold" : (state.colors[who] || who);
+    function go(screen, extra = {}) { Object.assign(state, extra, { screen }); render(); }
+    function eventsOn(day) { return state.events.filter(e => e.day === day); }
+    function pill(ev) {
+      const who = ev.who === "all" ? "" : MEMBERS[ev.who].name + " · ";
+      return `<button class="pill ${colorOf(ev.who)}${ev.cancelled ? " cancelled" : ""}" data-open="${ev.id}">${who}${ev.title} ${ev.start}${ev.cancelled ? " · отменено" : ""}</button>`;
+    }
+    function viewerSwitch() {
+      return `<div class="viewer">${Object.entries(MEMBERS).map(([id,m]) => `<button class="chip ${m.color} ${state.viewer===id?"on":""}" data-viewer="${id}">${m.name}</button>`).join("")}</div>`;
+    }
+    function weekView() {
+      return `<div class="brand"><h1>Дневник</h1>${viewerSwitch()}</div>
+        <div class="toast ${state.toast?"show":""}">${state.toast}</div>
+        ${DAYS.map(d => `<button class="day-card ${d.focus?"today":""}" data-day="${d.id}"><div class="day-head"><b>${d.label}</b><span>${d.short}</span></div><div class="pills">${eventsOn(d.id).map(pill).join("")}</div></button>`).join("")}`;
+    }
+    function toMin(t){const [h,m]=t.split(":").map(Number);return h*60+m;}
+    function topPx(t){return ((toMin(t)-480)/60)*46;}
+    function hPx(a,b){return Math.max(46,((toMin(b)-toMin(a))/60)*46);}
+    function dayView() {
+      const day = DAYS.find(d => d.id === state.day) || DAYS[1];
+      const evs = eventsOn(state.day);
+      const hours = Array.from({length:13},(_,i)=>8+i);
+      const dentist = evs.find(e => e.id === "dentist");
+      const nails = evs.find(e => e.id === "nails");
+      const split = state.day === "2026-09-09" && dentist && nails;
+      return `<div class="topbar"><button class="icon-btn" data-go="week">←</button><div class="title">${day.label}, ${day.short}</div><button class="icon-btn" data-go="add">+</button></div>
+        <div class="toast ${state.toast?"show":""}">${state.toast}</div>
+        <div class="timeline" style="position:relative;height:${13*46}px">
+          ${hours.map(h=>`<div class="slot"><div class="hour">${String(h).padStart(2,"0")}:00</div><div class="lane"></div></div>`).join("")}
+          ${evs.filter(e => !(split && (e.id==="dentist"||e.id==="nails"))).map(e => `<button class="block" style="top:${topPx(e.start)}px;height:${hPx(e.start,e.end)}px;background:var(--${colorOf(e.who)}-bg)" data-open="${e.id}">${e.who==="all"?e.title:MEMBERS[e.who].name+" · "+e.title}${e.note?`<small>${e.note}</small>`:""}</button>`).join("")}
+          ${split?`<div class="split" style="top:${topPx("17:00")}px;height:${hPx("17:00","18:30")}px">
+            ${!dentist.cancelled?`<div class="badge">пересечение</div>`:""}
+            <button class="block ${dentist.cancelled?"pill cancelled":""}" style="background:var(--mark-bg)" data-open="dentist">Марк · Стоматолог<small>${dentist.cancelled?"отменено · 3 часа назад":"другой конец города"}</small></button>
+            <button class="block" style="background:var(--katya-bg)" data-open="nails">Катя · Маникюр<small>салон</small></button>
+          </div>`:""}
+        </div>
+        <button class="primary" data-go="add">+ Добавить запись</button>`;
+    }
+    function familyView() {
+      return `<div class="topbar"><div class="title" style="font-family:'Cormorant Garamond',serif;font-size:32px">Семья</div></div>
+        ${Object.entries(MEMBERS).map(([id,m]) => `<div class="card"><div class="row"><b>${m.name}</b><span>свой цвет</span></div>
+          <div class="colors"><span class="swatch on" style="background:var(--${m.color})"></span><span class="swatch" style="background:#d7c7b5"></span><span class="swatch" style="background:#fff"></span></div></div>`).join("")}
+        <button class="ghost" id="invite">Пригласить в календарь</button>
+        <div class="hint" style="text-align:center">один календарь на несколько телефонов</div>`;
+    }
+    function addView() {
+      const f = state.form;
+      return `<div class="topbar"><button class="icon-btn" data-go="day">←</button><div class="title">Новая запись</div><span></span></div>
+        <label>Кто</label><div class="who">${Object.entries(MEMBERS).map(([id,m])=>`<button class="chip ${m.color} ${f.who===id?"on":""}" data-who="${id}">${m.name}</button>`).join("")}</div>
+        <label>Что</label><input id="title" value="${f.title}" />
+        <label>Дата</label><select id="date">${DAYS.map(d=>`<option value="${d.id}" ${d.id===f.date?"selected":""}>${d.label}, ${d.short}</option>`).join("")}</select>
+        <label>Время</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="start" value="${f.start}" /><input id="end" value="${f.end}" /></div>
+        <label>Где / заметка</label><input id="note" value="${f.note}" />
+        <button class="primary" id="save">Сохранить</button>`;
+    }
+    function eventView() {
+      const ev = state.events.find(e => e.id === state.eventId);
+      if (!ev) return weekView();
+      const who = ev.who === "all" ? "вся семья" : MEMBERS[ev.who].name;
+      const day = DAYS.find(d => d.id === ev.day);
+      return `<div class="topbar"><button class="icon-btn" data-go="day">←</button><div class="title">${ev.title}</div><span></span></div>
+        <div class="card">
+          <div class="row"><span>Кто</span><b>${who}</b></div>
+          <div class="row"><span>Когда</span><b>${day.label} ${ev.start}–${ev.end}</b></div>
+          <div class="row"><span>Где</span><b>${ev.note || "—"}</b></div>
+          <div class="row"><span>Видят</span><b>вся семья</b></div>
+        </div>
+        <button class="ghost" data-go="add">Перенести</button>
+        ${ev.cancelled ? `<div class="hint">Уже отменено</div>` : `<button class="danger" id="cancel">Отменить запись</button><div class="hint">Катя и Аня увидят изменение сразу</div>`}`;
+    }
+    function render() {
+      const map = { week: weekView, day: dayView, family: familyView, add: addView, event: eventView };
+      $("#app").innerHTML = (map[state.screen] || weekView)();
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.go === (["add","event"].includes(state.screen) ? "day" : state.screen)));
+    }
+    document.body.addEventListener("click", (e) => {
+      const t = e.target.closest("[data-go],[data-day],[data-open],[data-viewer],[data-who],#cancel,#save,#invite");
+      if (!t) return;
+      if (t.dataset.viewer) { state.viewer = t.dataset.viewer; render(); return; }
+      if (t.dataset.who) { state.form.who = t.dataset.who; render(); return; }
+      if (t.dataset.day) { go("day", { day: t.dataset.day }); return; }
+      if (t.dataset.open) { const ev = state.events.find(x => x.id === t.dataset.open); go("event", { eventId: t.dataset.open, day: ev ? ev.day : state.day }); return; }
+      if (t.dataset.go) { go(t.dataset.go); return; }
+      if (t.id === "invite") { state.toast = "Ссылка скопирована — откройте на втором телефоне"; go("family"); return; }
+      if (t.id === "cancel") {
+        const ev = state.events.find(x => x.id === state.eventId);
+        if (ev) ev.cancelled = true;
+        state.toast = (MEMBERS[ev.who] ? MEMBERS[ev.who].name : "") + " отменил(а) «" + ev.title + "» — слот " + ev.start + " свободен";
+        go("day", { day: ev.day }); return;
+      }
+      if (t.id === "save") {
+        state.events.push({ id: "e" + Date.now(), day: $("#date").value, who: state.form.who, title: $("#title").value.trim() || "Запись", start: $("#start").value, end: $("#end").value, note: $("#note").value });
+        state.toast = "Запись появилась у всей семьи";
+        go("week");
+      }
+    });
+    render();
+  </script>
+</body>
+</html>
